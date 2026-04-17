@@ -6,7 +6,7 @@ from src.evaluation.srr import srr
 
 
 @torch.no_grad()
-def evaluate(encoder, decoder, nsynth_loader, moisesdb_loader, device="cpu"):
+def evaluate(model, nsynth_loader, moisesdb_loader, device="cpu"):
     """
     Run full evaluation — MIG, DCI, SRR.
 
@@ -24,8 +24,8 @@ def evaluate(encoder, decoder, nsynth_loader, moisesdb_loader, device="cpu"):
     Returns:
         dict with keys: mig_pitch, mig_identity, dci_d, dci_c, dci_i, srr
     """
-    encoder.eval()
-    decoder.eval()
+    model.eval()
+    
 
     zs_all, zc_all = [], []
     pitch_all, identity_all = [], []
@@ -47,8 +47,8 @@ def evaluate(encoder, decoder, nsynth_loader, moisesdb_loader, device="cpu"):
     # --- MoisesDB pass ---
     for batch in moisesdb_loader:
         mel = batch["mel"].to(device)
-        zs, zc = encoder(mel)
-        mel_recon = decoder(zs, zc)
+        zs, zc = model.encode(mel)
+        mel_recon = model.decode(zs, zc)
 
         zs_all.append(zs.cpu().numpy())
         zc_all.append(zc.cpu().numpy())
