@@ -12,7 +12,7 @@ class NSynthWithIdentity(Dataset):
 
     def __getitem__(self, idx):
         sample = self.ds[idx]
-        sample["identity"] = torch.tensor(-1, dtype=torch.long)
+        sample["identity"] =  tensor(-1, dtype=torch.long)
         return sample
 
 
@@ -31,9 +31,14 @@ class MoisesDBWithPitch(Dataset):
 
 
 def get_train_loader(nsynth_ds, moisesdb_ds, batch_size=32, num_workers=0):
-    nsynth_wrapped = NSynthWithIdentity(nsynth_ds)
-    moisesdb_wrapped = MoisesDBWithPitch(moisesdb_ds)
-    combined = ConcatDataset([nsynth_wrapped, moisesdb_wrapped])
+    datasets = []
+    if nsynth_ds is not None:
+        datasets.append(NSynthWithIdentity(nsynth_ds))
+    if moisesdb_ds is not None:
+        datasets.append(MoisesDBWithPitch(moisesdb_ds))
+    if not datasets:
+        raise RuntimeError("No datasets provided")
+    combined = ConcatDataset(datasets)
     return DataLoader(combined, batch_size=batch_size, shuffle=True, num_workers=num_workers, pin_memory=True)
 
 
