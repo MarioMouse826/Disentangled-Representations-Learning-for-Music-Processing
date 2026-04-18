@@ -12,7 +12,7 @@ class NSynthWithIdentity(Dataset):
 
     def __getitem__(self, idx):
         sample = self.ds[idx]
-        sample["identity"] =  tensor(-1, dtype=torch.long)
+        sample["identity"] =  torch.tensor(-1, dtype=torch.long)
         return sample
 
 

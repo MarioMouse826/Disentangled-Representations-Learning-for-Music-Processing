@@ -29,6 +29,6 @@ class Decoder(nn.Module):
         x = self.fc(z)                         # (B, 14336)
         x = x.view(x.size(0), 256, 8, 7)      # (B, 256, 8, 7)
         x = self.deconv(x)                     # (B, 1, 128, 112)
-        x = F.interpolate(x, size=(128, 125))  # (B, 1, 128, 125)
+        x = F.interpolate(x, size=(128, 126))  # (B, 1, 128, 125)
         x = x.squeeze(1)                       # (B, 128, 125)
         return x
