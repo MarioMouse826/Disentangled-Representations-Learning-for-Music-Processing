@@ -7,22 +7,24 @@ from torch.utils.data import Dataset
 
 class MoisesDB(Dataset):
     def __init__(self, data_dir, sr=16000, n_mels=128, duration=4.0, pitch_shift_range=(-6, 6)):
-        self.data_dir = data_dir
         self.sr = sr
         self.n_mels = n_mels
         self.duration = duration
         self.samples = int(sr * duration)
         self.pitch_shift_range = pitch_shift_range
 
+        # path: data_dir/moisesdb_v0.1/<track_uuid>/bass/<file>.wav
+        v01_dir = os.path.join(data_dir, "moisesdb_v0.1")
+
         self.files = []
-        for track_id, track in enumerate(sorted(os.listdir(data_dir))):
-            track_path = os.path.join(data_dir, track)
-            if not os.path.isdir(track_path):
+        for track_id, track in enumerate(sorted(os.listdir(v01_dir))):
+            bass_dir = os.path.join(v01_dir, track, "bass")
+            if not os.path.isdir(bass_dir):
                 continue
-            for fname in os.listdir(track_path):
-                if fname.endswith(".wav") and "bass" in fname.lower():
+            for fname in os.listdir(bass_dir):
+                if fname.endswith(".wav"):
                     self.files.append({
-                        "path": os.path.join(track_path, fname),
+                        "path": os.path.join(bass_dir, fname),
                         "identity": track_id,
                         "track_name": track,
                     })
@@ -36,7 +38,6 @@ class MoisesDB(Dataset):
         y, _ = librosa.load(item["path"], sr=self.sr, mono=True)
         y = self._random_crop(y)
 
-        # +1 so range is inclusive on both ends
         low, high = self.pitch_shift_range
         n_steps = np.random.randint(low, high + 1)
         y_shifted = librosa.effects.pitch_shift(y, sr=self.sr, n_steps=n_steps)
