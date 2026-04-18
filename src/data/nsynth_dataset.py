@@ -1,5 +1,4 @@
 import os
-import json
 import numpy as np
 import librosa
 import torch
@@ -15,28 +14,32 @@ class NSynthBass(Dataset):
         self.samples = int(sr * duration)
         self.pitch_shift_range = pitch_shift_range
 
-        # load metadata and filter bass only
-        meta_path = os.path.join(data_dir, "examples.json")
-        with open(meta_path) as f:
-            meta = json.load(f)
-
-        self.files = [
-            {"name": k, "pitch": v["pitch"]}
-            for k, v in meta.items()
-            if "bass" in v["instrument_family_str"]
-        ]
+        audio_dir = os.path.join(data_dir, "audio")
+        self.files = []
+        for fname in os.listdir(audio_dir):
+            if not fname.endswith(".wav"):
+                continue
+            if not fname.startswith("bass"):
+                continue
+            try:
+                pitch = int(fname.split("-")[1])
+            except (IndexError, ValueError):
+                continue
+            self.files.append({
+                "name": fname,
+                "path": os.path.join(audio_dir, fname),
+                "pitch": pitch,
+            })
 
     def __len__(self):
         return len(self.files)
 
     def __getitem__(self, idx):
         item = self.files[idx]
-        path = os.path.join(self.data_dir, "audio", item["name"] + ".wav")
 
-        y, _ = librosa.load(path, sr=self.sr, mono=True)
+        y, _ = librosa.load(item["path"], sr=self.sr, mono=True)
         y = self._fix_length(y)
 
-        # random pitch shift for symmetry pair
         low, high = self.pitch_shift_range
         n_steps = np.random.randint(low, high + 1)
         y_shifted = librosa.effects.pitch_shift(y, sr=self.sr, n_steps=n_steps)
