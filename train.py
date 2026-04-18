@@ -4,10 +4,9 @@ import torch
 import torch.optim as optim
 
 from src.models.vae import SymmetryVAE
-from src.data.nsynth_dataset import NSynthBass
-from src.data.moisesdb_dataset import MoisesDB
 from src.data.dataloader import get_train_loader
-
+from src.data.nsynth_preprocessed import NSynthBassPreprocessed
+from src.data.moisesdb_preprocessed import MoisesDBPreprocessed
 
 def parse_args():
     p = argparse.ArgumentParser()
@@ -29,22 +28,21 @@ def load_datasets(args):
     nsynth_ds, moisesdb_ds = None, None
 
     if os.path.exists(args.nsynth_dir):
-        nsynth_ds = NSynthBass(args.nsynth_dir)
+        nsynth_ds = NSynthBassPreprocessed(args.nsynth_dir)
         print(f"NSynth: {len(nsynth_ds)} samples")
     else:
         print(f"NSynth dir not found ({args.nsynth_dir}), skipping")
 
     if os.path.exists(args.moisesdb_dir):
-        moisesdb_ds = MoisesDB(args.moisesdb_dir)
+        moisesdb_ds = MoisesDBPreprocessed(args.moisesdb_dir)
         print(f"MoisesDB: {len(moisesdb_ds)} samples")
     else:
         print(f"MoisesDB dir not found ({args.moisesdb_dir}), skipping")
 
     if nsynth_ds is None and moisesdb_ds is None:
-        raise RuntimeError("No datasets found. Check --nsynth_dir and --moisesdb_dir.")
+        raise RuntimeError("No datasets found.")
 
     return nsynth_ds, moisesdb_ds
-
 
 def train(args):
     device = torch.device(args.device)
