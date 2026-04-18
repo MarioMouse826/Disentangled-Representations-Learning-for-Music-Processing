@@ -29,11 +29,29 @@
 - MoisesDB download running as SLURM job (6507167)
 - Conda env working: /scratch/at7095/conda_envs/musicvae (Python 3.9)
 - HPC repo at: /scratch/at7095/ML_Project/Disentangled-Representations-Learning-for-Music-Processing
+
+## April 18, 2026
+
+### Done
+- Fixed home dir quota on HPC (cleared 5.3GB from .local)
+- Conda env working: /scratch/at7095/conda_envs/musicvae (Python 3.9)
+- NSynth fully extracted: 65,474 bass files
+- MoisesDB fully extracted: 240 tracks, 237 bass files, 12,510 chunks
+- Preprocessing script: converted all audio to mel spectrograms (.npy)
+  - NSynth: 65,474 npy files
+  - MoisesDB: 12,510 npy files (4s chunks)
+- Preprocessed dataset classes (nsynth_preprocessed.py, moisesdb_preprocessed.py)
+- Fixed GPU utilization issue — npy loading keeps GPU busy
+- Training job running: job 6546023, epoch 4+ in progress
+- MoisesDB dataset class updated to match actual path structure
+
 ### Blocked
-- Full Magenta import broken — Keras 3 / RNNCell incompatibility
-- Datasets not downloaded yet — need HPC for full run
+- Nothing currently blocked
 
 ### Up Next
-- Download NSynth + MoisesDB on HPC
-- Set up Greene environment
-- Run full training pipeline on HPC
+- Wait for training to complete (50 epochs)
+- Run evaluation (MIG, DCI, SRR) on trained model
+- Compare against baselines
+
+
+
