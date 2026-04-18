@@ -24,7 +24,11 @@
 - SymmetryVAE full model + loss (src/models/vae.py)
 - Training loop with grad clipping, checkpointing (train.py)
 - requirements.txt
-
+- Fixed NSynthBass to parse pitch from filename (no json needed)
+- NSynth bass subset loaded: 12,075 samples
+- MoisesDB download running as SLURM job (6507167)
+- Conda env working: /scratch/at7095/conda_envs/musicvae (Python 3.9)
+- HPC repo at: /scratch/at7095/ML_Project/Disentangled-Representations-Learning-for-Music-Processing
 ### Blocked
 - Full Magenta import broken — Keras 3 / RNNCell incompatibility
 - Datasets not downloaded yet — need HPC for full run
