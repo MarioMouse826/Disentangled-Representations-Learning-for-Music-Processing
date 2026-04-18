@@ -8,6 +8,7 @@ from src.data.dataloader import get_train_loader
 from src.data.nsynth_preprocessed import NSynthBassPreprocessed
 from src.data.moisesdb_preprocessed import MoisesDBPreprocessed
 
+
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--nsynth_dir",   type=str, default="data/nsynth")
@@ -16,11 +17,13 @@ def parse_args():
     p.add_argument("--zc_dim",       type=int, default=32)
     p.add_argument("--beta",         type=float, default=1.0)
     p.add_argument("--lambda_sym",   type=float, default=1.0)
-    p.add_argument("--lr",           type=float, default=1e-3)
+    p.add_argument("--lr",           type=float, default=3e-4)
     p.add_argument("--epochs",       type=int, default=50)
-    p.add_argument("--batch_size",   type=int, default=32)
+    p.add_argument("--batch_size",   type=int, default=256)
+    p.add_argument("--num_workers",  type=int, default=4)
     p.add_argument("--log_every",    type=int, default=50)
     p.add_argument("--device",       type=str, default="cuda" if torch.cuda.is_available() else "cpu")
+    p.add_argument("--resume",       type=str, default=None)
     return p.parse_args()
 
 
@@ -44,12 +47,13 @@ def load_datasets(args):
 
     return nsynth_ds, moisesdb_ds
 
+
 def train(args):
     device = torch.device(args.device)
     print(f"Device: {device}")
 
     nsynth_ds, moisesdb_ds = load_datasets(args)
-    loader = get_train_loader(nsynth_ds, moisesdb_ds, batch_size=args.batch_size)
+    loader = get_train_loader(nsynth_ds, moisesdb_ds, batch_size=args.batch_size, num_workers=args.num_workers)
 
     model = SymmetryVAE(
         zs_dim=args.zs_dim,
@@ -60,11 +64,21 @@ def train(args):
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
+    start_epoch = 1
+    if args.resume:
+        print(f"Resuming from {args.resume}")
+        ckpt = torch.load(args.resume, map_location=device)
+        model.load_state_dict(ckpt["model_state"])
+        optimizer.load_state_dict(ckpt["optimizer_state"])
+        start_epoch = ckpt["epoch"] + 1
+        print(f"Resumed at epoch {start_epoch}")
+
     os.makedirs("results/checkpoints", exist_ok=True)
 
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(start_epoch, args.epochs + 1):
         model.train()
         total_loss = 0
+        skipped = 0
 
         for i, batch in enumerate(loader):
             mel         = batch["mel"].to(device)
@@ -73,6 +87,14 @@ def train(args):
             optimizer.zero_grad()
             _, loss, components = model(mel, mel_shifted)
             loss.backward()
+
+            # skip batch if gradients are NaN
+            if any(torch.isnan(p.grad).any() for p in model.parameters() if p.grad is not None):
+                print(f"NaN gradient at epoch {epoch} batch {i+1}, skipping")
+                optimizer.zero_grad()
+                skipped += 1
+                continue
+
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
 
@@ -89,7 +111,7 @@ def train(args):
                 )
 
         avg_loss = total_loss / len(loader)
-        print(f"Epoch {epoch} complete | avg loss: {avg_loss:.4f}")
+        print(f"Epoch {epoch} complete | avg loss: {avg_loss:.4f} | skipped batches: {skipped}")
 
         if epoch % 5 == 0:
             torch.save({
