@@ -64,10 +64,24 @@
   - srr_db:       25.19 dB
 - Results committed to git
 - Resubmitted training with stronger hyperparameters (job 6589672, beta=4.0, lambda_sym=10.0)
+## April 19, 2026
+### Done
+
+- Run 2 training completed (job 6589672, beta=4.0, lambda_sym=10.0, final avg loss: 19.6504)
+- Run 2 evaluation completed (job 6595570):
+  - mig_pitch:    0.0245  (↑ from 0.0093)
+  - mig_identity: 0.0050  (↓ from 0.0808)
+  - dci_d:        0.0456  (↑ from 0.0420)
+  - dci_c:        0.0446  (↑ from 0.0248)
+  - dci_i:        0.9590  (unchanged)
+  - srr_db:       23.75   (↓ from 25.19)
+- Key finding: stronger beta/lambda_sym improves pitch disentanglement but hurts
+  identity separability — tradeoff worth discussing in writeup
+- Eval outputs saved to logs/eval_run2_beta4_lsym10.out
+
+### Blocked
+- Nothing currently blocked
 
 ### Up Next
-- Wait for Run 2 training to complete (job 6589672)
-- Run evaluation on Run 2 checkpoint
-- Implement β-VAE baseline
+- Implement β-VAE baseline for comparison
 - Write up results
-
