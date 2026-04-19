@@ -45,13 +45,29 @@
 - Training job running: job 6546023, epoch 4+ in progress
 - MoisesDB dataset class updated to match actual path structure
 
-### Blocked
-- Nothing currently blocked
+## April 18, 2026 (continued)
+### Done
+- Diagnosed NaN loss explosion in training job 6558198 (all 50 epochs NaN)
+- Root cause: BatchNorm2d in encoder producing NaN on near-silent mel batches
+- Fix: replaced all BatchNorm2d → InstanceNorm2d(affine=True) in encoder.py
+- Fixed encoder forward bug: both heads using content_head instead of style_head/content_head
+- Reduced lr 1e-3 → 3e-4 for stability
+- Added NaN gradient detection + batch skip in train loop
+- Clean 50-epoch training run completed (job 6588403, beta=1.0, lambda_sym=1.0)
+- Fixed evaluate.py bugs (encoder/identity/pitch key errors), added run_eval.py runner
+- Run 1 evaluation completed (job 6589342):
+  - mig_pitch:    0.0093
+  - mig_identity: 0.0808
+  - dci_d:        0.0420
+  - dci_c:        0.0248
+  - dci_i:        0.9590
+  - srr_db:       25.19 dB
+- Results committed to git
+- Resubmitted training with stronger hyperparameters (job 6589672, beta=4.0, lambda_sym=10.0)
 
 ### Up Next
-- Wait for training to complete (50 epochs)
-- Run evaluation (MIG, DCI, SRR) on trained model
-- Compare against baselines
-
-
+- Wait for Run 2 training to complete (job 6589672)
+- Run evaluation on Run 2 checkpoint
+- Implement β-VAE baseline
+- Write up results
 
