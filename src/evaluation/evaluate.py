@@ -34,13 +34,13 @@ def evaluate(model, nsynth_loader, moisesdb_loader, device="cpu"):
     # --- NSynth pass ---
     for batch in nsynth_loader:
         mel = batch["mel"].to(device)
-        zs, zc = encoder(mel)
-        mel_recon = decoder(zs, zc)
+        zs, zc = model.encode(mel)
+        mel_recon = model.decoder(zs, zc)
 
         zs_all.append(zs.cpu().numpy())
         zc_all.append(zc.cpu().numpy())
         pitch_all.append(batch["pitch"].numpy())
-        identity_all.append(batch["identity"].numpy())  # -1 for NSynth
+        identity_all.append(np.full(len(batch["mel"]), -1))
         mel_orig_all.append(mel.cpu().numpy())
         mel_recon_all.append(mel_recon.cpu().numpy())
 
@@ -52,7 +52,7 @@ def evaluate(model, nsynth_loader, moisesdb_loader, device="cpu"):
 
         zs_all.append(zs.cpu().numpy())
         zc_all.append(zc.cpu().numpy())
-        pitch_all.append(batch["pitch"].numpy())  # -1 for MoisesDB
+        pitch_all.append(np.full(len(batch["mel"]), -1))
         identity_all.append(batch["identity"].numpy())
         mel_orig_all.append(mel.cpu().numpy())
         mel_recon_all.append(mel_recon.cpu().numpy())
