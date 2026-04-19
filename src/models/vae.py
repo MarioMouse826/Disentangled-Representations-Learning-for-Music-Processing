@@ -6,7 +6,7 @@ from src.models.decoder import Decoder
 
 
 class SymmetryVAE(nn.Module):
-    def __init__(self, zs_dim=32, zc_dim=32, beta=1.0, lambda_sym=1.0):
+    def __init__(self, zs_dim=128, zc_dim=128, beta=1.0, lambda_sym=1.0):
         super().__init__()
         self.encoder = Encoder(zs_dim, zc_dim)
         self.decoder = Decoder(zs_dim, zc_dim)

@@ -45,7 +45,7 @@ class Encoder(nn.Module):
         x = self.backbone(x)
         x = x.view(x.size(0), -1)
 
-        zs = self.content_head(x)
+        zs = self.style_head(x)
         zc = self.content_head(x)
 
         zs_mean, zs_logvar = zs.chunk(2, dim=1)

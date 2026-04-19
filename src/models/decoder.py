@@ -4,31 +4,38 @@ import torch.nn.functional as F
 
 
 class Decoder(nn.Module):
-    def __init__(self, zs_dim=32, zc_dim=32):
+    def __init__(self, zs_dim=128, zc_dim=128):
         super().__init__()
 
-        self.flat_dim = 256 * 8 * 7  # 14336
+        self.flat_dim = 1024 * 4 * 3  # 12288
 
-        self.fc = nn.Linear(zs_dim + zc_dim, self.flat_dim)
+        self.fc = nn.Sequential(
+            nn.Linear(zs_dim + zc_dim, 512),
+            nn.ReLU(),
+            nn.Linear(512, self.flat_dim)
+        )
 
         self.deconv = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, 4, stride=2, padding=1), # (B, 128, 16, 14)
+            nn.ConvTranspose2d(1024, 512, 4, stride=2, padding=1), # (B, 512, 8, 6)
+            nn.BatchNorm2d(512),
+            nn.ReLU(),
+            nn.ConvTranspose2d(512, 256, 4, stride=2, padding=1),  # (B, 256, 16, 12)
+            nn.BatchNorm2d(256),
+            nn.ReLU(),
+            nn.ConvTranspose2d(256, 128, 4, stride=2, padding=1),  # (B, 128, 32, 24)
             nn.BatchNorm2d(128),
             nn.ReLU(),
-            nn.ConvTranspose2d(128, 64, 4, stride=2, padding=1),  # (B, 64, 32, 28)
+            nn.ConvTranspose2d(128, 64, 4, stride=2, padding=1),   # (B, 64, 64, 48)
             nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.ConvTranspose2d(64, 32, 4, stride=2, padding=1),   # (B, 32, 64, 56)
-            nn.BatchNorm2d(32),
-            nn.ReLU(),
-            nn.ConvTranspose2d(32, 1, 4, stride=2, padding=1),    # (B, 1, 128, 112)
+            nn.ConvTranspose2d(64, 1, 4, stride=2, padding=1),     # (B, 1, 128, 96)
         )
 
     def forward(self, zs, zc):
-        z = torch.cat([zs, zc], dim=1)       # (B, 64)
-        x = self.fc(z)                         # (B, 14336)
-        x = x.view(x.size(0), 256, 8, 7)      # (B, 256, 8, 7)
-        x = self.deconv(x)                     # (B, 1, 128, 112)
-        x = F.interpolate(x, size=(128, 126))  # (B, 1, 128, 125)
-        x = x.squeeze(1)                       # (B, 128, 125)
+        z = torch.cat([zs, zc], dim=1)
+        x = self.fc(z)
+        x = x.view(x.size(0), 1024, 4, 3)
+        x = self.deconv(x)
+        x = F.interpolate(x, size=(128, 126))
+        x = x.squeeze(1)
         return x
