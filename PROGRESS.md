@@ -53,7 +53,7 @@
 - Fixed encoder forward bug: both heads using content_head instead of style_head/content_head
 - Reduced lr 1e-3 → 3e-4 for stability
 - Added NaN gradient detection + batch skip in train loop
-- Clean 50-epoch training run completed (job 6588403, beta=1.0, lambda_sym=1.0)
+- Clean 50-epoch training run completed (job 6588403, beta=1.0, lambda_sym=1.0, final avg loss: 13.0723)
 - Fixed evaluate.py bugs (encoder/identity/pitch key errors), added run_eval.py runner
 - Run 1 evaluation completed (job 6589342):
   - mig_pitch:    0.0093
