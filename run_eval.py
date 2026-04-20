@@ -18,13 +18,23 @@ device = torch.device(args.device)
 ckpt = torch.load(args.checkpoint, map_location=device)
 saved_args = ckpt["args"]
 
-model = SymmetryVAE(
-    zs_dim=saved_args["zs_dim"],
-    zc_dim=saved_args["zc_dim"],
-    beta=saved_args["beta"],
-    lambda_sym=saved_args["lambda_sym"]
-).to(device)
-model.load_state_dict(ckpt["model_state"])
+from src.models.beta_vae import BetaVAE
+from src.models.vae import SymmetryVAE
+
+if "lambda_sym" in saved_args:
+    model = SymmetryVAE(
+        zs_dim=saved_args["zs_dim"],
+        zc_dim=saved_args["zc_dim"],
+        beta=saved_args["beta"],
+        lambda_sym=saved_args["lambda_sym"]
+    ).to(device)
+else:
+    model = BetaVAE(
+        zs_dim=saved_args["zs_dim"],
+        zc_dim=saved_args["zc_dim"],
+        beta=saved_args["beta"]
+    ).to(device)
+    model.load_state_dict(ckpt["model_state"])
 
 nsynth_ds   = NSynthBassPreprocessed(args.nsynth_dir)
 moisesdb_ds = MoisesDBPreprocessed(args.moisesdb_dir)
