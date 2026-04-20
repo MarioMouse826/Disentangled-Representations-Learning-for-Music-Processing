@@ -79,9 +79,29 @@
   identity separability — tradeoff worth discussing in writeup
 - Eval outputs saved to logs/eval_run2_beta4_lsym10.out
 
+## April 20, 2026
+### Done
+- Implemented β-VAE baseline (src/models/beta_vae.py, train_beta_vae.py)
+- Run 3 training completed (job 6737470, beta=4.0, lambda_sym=50.0, 50 epochs, avg loss: 20.1638)
+- β-VAE baseline training completed (job 6737469, beta=4.0, 50 epochs, avg loss: 19.6362)
+- Fixed run_eval.py to auto-detect SymmetryVAE vs BetaVAE from checkpoint
+- All evaluations completed:
+
+| Metric       | β-VAE (β=4) | Run1 (β=1,λ=1) | Run2 (β=4,λ=10) | Run3 (β=4,λ=50) |
+|--------------|-------------|-----------------|-----------------|-----------------|
+| MIG pitch    | 0.0014      | 0.0093          | 0.0245          | 0.0109          |
+| MIG identity | 0.0741      | 0.0808          | 0.0050          | 0.0016          |
+| DCI-D        | 0.0466      | 0.0420          | 0.0456          | 0.0505          |
+| DCI-C        | 0.0302      | 0.0248          | 0.0446          | 0.0422          |
+| DCI-I        | 0.9590      | 0.9590          | 0.9590          | 0.9590          |
+| SRR (dB)     | 23.52       | 25.19           | 23.75           | 23.62           |
+
+- Key finding: symmetry constraint improves pitch disentanglement vs β-VAE baseline
+  but creates tradeoff with identity separability at higher lambda_sym
+- Submitting Run 4: beta=4.0, lambda_sym=10.0, 100 epochs for deeper training
+
 ### Blocked
 - Nothing currently blocked
 
 ### Up Next
-- Implement β-VAE baseline for comparison
-- Write up results
+- Wait for Run 4 (100 epochs) results
