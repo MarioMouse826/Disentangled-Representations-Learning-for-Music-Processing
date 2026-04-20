@@ -99,8 +99,35 @@
 - Key finding: symmetry constraint improves pitch disentanglement vs β-VAE baseline
   but creates tradeoff with identity separability at higher lambda_sym
 - Submitting Run 4: beta=4.0, lambda_sym=10.0, 100 epochs for deeper training
+- Implemented zero-shot evaluation pipeline (src/data/zeroshot_dataset.py, run_zeroshot_eval.py)
+- Selected 8 holdout tracks across 8 genres as zero-shot test set:
+  blues, bossa_nova, country, electronic, jazz, musical_theatre, reggae, world_folk
+- Zero-shot eval completed for SymVAE Run2 and β-VAE:
+
+| Song                          | β-VAE Style Var | SymVAE Style Var |
+|-------------------------------|-----------------|------------------|
+| Can't Play The Blues          | 0.2790          | 0.3255           |
+| Dreaming Bout Being With You  | 0.2166          | 0.3079           |
+| Nexus                         | 0.2447          | 0.2900           |
+| Places                        | 0.2875          | 0.2462           |
+| Sick Of Waiting               | 0.3016          | 0.2275           |
+| Stolen Car                    | 0.4589          | 0.0977           |
+| The Best In Me                | 0.3469          | 0.2020           |
+| The Last To Know              | 0.2811          | 0.2519           |
+| **MEAN**                      | **0.3020**      | **0.2436**       |
+
+- Key finding: SymVAE produces more stable style encodings (lower Style Var)
+  across out-of-distribution songs vs β-VAE baseline
+- Stolen Car (electronic) shows strongest improvement (0.0977 vs 0.4589)
 
 ### Blocked
+- Waiting for Run 4 (job 6744351) and Hierarchical VAE (job 6744408) to finish
+
+### Up Next
+- Evaluate Run 4 and Hierarchical VAE checkpoints
+- Run zero-shot eval on Run 4 and Hierarchical VAE
+- Write paper with team next weekend
+- Deadline: April 29, 2026### Blocked
 - Nothing currently blocked
 
 ### Up Next
