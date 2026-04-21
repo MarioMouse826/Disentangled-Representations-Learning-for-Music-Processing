@@ -7,25 +7,7 @@ from src.evaluation.srr import srr
 
 @torch.no_grad()
 def evaluate(model, nsynth_loader, moisesdb_loader, device="cpu"):
-    """
-    Run full evaluation — MIG, DCI, SRR.
-
-    Assumes:
-        encoder(mel) -> (zs_mean, zc_mean)
-        decoder(zs, zc) -> mel_recon
-
-    Args:
-        encoder:          trained encoder model
-        decoder:          trained decoder model
-        nsynth_loader:    DataLoader for NSynth eval set
-        moisesdb_loader:  DataLoader for MoisesDB eval set
-        device:           'cpu' or 'cuda'
-
-    Returns:
-        dict with keys: mig_pitch, mig_identity, dci_d, dci_c, dci_i, srr
-    """
     model.eval()
-    
 
     zs_all, zc_all = [], []
     pitch_all, identity_all = [], []
@@ -35,7 +17,7 @@ def evaluate(model, nsynth_loader, moisesdb_loader, device="cpu"):
     for batch in nsynth_loader:
         mel = batch["mel"].to(device)
         zs, zc = model.encode(mel)
-        mel_recon = model.decoder(zs, zc)
+        mel_recon = model.decode(zs, zc)
 
         zs_all.append(zs.cpu().numpy())
         zc_all.append(zc.cpu().numpy())
@@ -68,7 +50,7 @@ def evaluate(model, nsynth_loader, moisesdb_loader, device="cpu"):
     mig_identity = mig(zs_all, identity_all)
     dci_scores   = dci(np.concatenate([zs_all, zc_all], axis=1),
                        {"pitch": pitch_all, "identity": identity_all})
-    srr_score    = srr(mel_orig_all, mel_recon_all)
+    srr_score    = srr(mel_orig_all, mel_recon_all) 
 
     results = {
         "mig_pitch":    round(mig_pitch, 4),

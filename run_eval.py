@@ -28,13 +28,22 @@ if "lambda_sym" in saved_args:
         beta=saved_args["beta"],
         lambda_sym=saved_args["lambda_sym"]
     ).to(device)
+elif "zg_dim" in saved_args:
+    from src.models.hierarchical_vae import HierarchicalVAE
+    model = HierarchicalVAE(
+        zg_dim=saved_args["zg_dim"],
+        zl_dim=saved_args["zl_dim"],
+        beta=saved_args["beta"]
+    ).to(device)
 else:
     model = BetaVAE(
         zs_dim=saved_args["zs_dim"],
         zc_dim=saved_args["zc_dim"],
         beta=saved_args["beta"]
     ).to(device)
-    model.load_state_dict(ckpt["model_state"])
+
+model.load_state_dict(ckpt["model_state"])
+model.eval()
 
 nsynth_ds   = NSynthBassPreprocessed(args.nsynth_dir)
 moisesdb_ds = MoisesDBPreprocessed(args.moisesdb_dir)
