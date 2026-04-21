@@ -120,15 +120,39 @@
   across out-of-distribution songs vs β-VAE baseline
 - Stolen Car (electronic) shows strongest improvement (0.0977 vs 0.4589)
 
+
+## April 20, 2026 (evening)
+### Bug Found — All Previous Eval Results Invalidated
+- Discovered decoder.py had BatchNorm2d in all 5 deconv layers
+- BatchNorm in eval mode uses accumulated running statistics from training
+- These statistics were inconsistent, causing decoder output to collapse to
+  near-constant values (-0.08 to -0.02) during evaluation
+- Debug output confirmed: mel_recon range was -0.08 to -0.02 vs mel_orig range
+  of -100 to +42 — decoder was completely broken in eval mode
+- Root cause: same BatchNorm issue we fixed in encoder earlier, but missed decoder
+- Fix: replaced all BatchNorm2d → InstanceNorm2d(affine=True) in decoder.py
+
+### What Was Affected
+- SRR values for all runs were wrong (showing ~23-25 dB but actually ~0.01-0.11)
+- DCI-D and DCI-C values likely affected
+- MIG scores, DCI-I, and zero-shot Style Var results are still valid
+  (encoder-only metrics, not affected by decoder bug)
+- Core findings still hold: SymmetryVAE beats beta-VAE on style stability
+
+### Fix
+- Fixed decoder.py (BatchNorm2d → InstanceNorm2d)
+- Submitted full retrain of all 3 models (job 6753596, ~16hrs):
+  1. SymmetryVAE (beta=4.0, lambda_sym=10.0, 100 epochs)
+  2. BetaVAE (beta=4.0, 50 epochs)
+  3. HierarchicalVAE (beta=4.0, 50 epochs)
+- Will re-evaluate all models once training completes
+
+### Up Next
+- Wait for job 6753596 to finish (email notification)
+- Run eval + zero-shot eval on all 3 models
+- Update results table with correct numbers
+- Write paper with team next weekend
+- Deadline: April 29, 2026
 ### Blocked
 - Waiting for Run 4 (job 6744351) and Hierarchical VAE (job 6744408) to finish
 
-### Up Next
-- Evaluate Run 4 and Hierarchical VAE checkpoints
-- Run zero-shot eval on Run 4 and Hierarchical VAE
-- Write paper with team next weekend
-- Deadline: April 29, 2026### Blocked
-- Nothing currently blocked
-
-### Up Next
-- Wait for Run 4 (100 epochs) results
