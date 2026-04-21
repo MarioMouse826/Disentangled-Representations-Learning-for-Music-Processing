@@ -16,19 +16,19 @@ class Decoder(nn.Module):
         )
 
         self.deconv = nn.Sequential(
-            nn.ConvTranspose2d(1024, 512, 4, stride=2, padding=1), # (B, 512, 8, 6)
-            nn.BatchNorm2d(512),
+            nn.ConvTranspose2d(1024, 512, 4, stride=2, padding=1),
+            nn.InstanceNorm2d(512, affine=True),
             nn.ReLU(),
-            nn.ConvTranspose2d(512, 256, 4, stride=2, padding=1),  # (B, 256, 16, 12)
-            nn.BatchNorm2d(256),
+            nn.ConvTranspose2d(512, 256, 4, stride=2, padding=1),
+            nn.InstanceNorm2d(256, affine=True),
             nn.ReLU(),
-            nn.ConvTranspose2d(256, 128, 4, stride=2, padding=1),  # (B, 128, 32, 24)
-            nn.BatchNorm2d(128),
+            nn.ConvTranspose2d(256, 128, 4, stride=2, padding=1),
+            nn.InstanceNorm2d(128, affine=True),
             nn.ReLU(),
-            nn.ConvTranspose2d(128, 64, 4, stride=2, padding=1),   # (B, 64, 64, 48)
-            nn.BatchNorm2d(64),
+            nn.ConvTranspose2d(128, 64, 4, stride=2, padding=1),
+            nn.InstanceNorm2d(64, affine=True),
             nn.ReLU(),
-            nn.ConvTranspose2d(64, 1, 4, stride=2, padding=1),     # (B, 1, 128, 96)
+            nn.ConvTranspose2d(64, 1, 4, stride=2, padding=1),
         )
 
     def forward(self, zs, zc):
