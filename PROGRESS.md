@@ -1,188 +1,53 @@
-# Adarsh — Progress Log
+# Mario — Progress Log 
 
-## Branch: adarsh/data-pipeline
+## Branch: Mario/Expanded-Models
 
 ---
 
-## April 17, 2026
+## April 22, 2026
 
 ### Done
-- Set up musicvae conda env (Python 3.9)
-- Installed core dependencies: tensorflow, librosa, numpy, note-seq, torch, torchaudio
-- Cloned MusicVAE (Magenta) repo
-- Cloned team repo, created and pushed adarsh/data-pipeline branch
-- Set up project folder structure (data/, src/, notebooks/, results/)
-- NSynthBass dataset class (src/data/nsynth_dataset.py)
-- MoisesDB dataset class (src/data/moisesdb_dataset.py)
-- Combined dataloader (src/data/dataloader.py)
-- MIG metric (src/evaluation/mig.py)
-- DCI metric (src/evaluation/dci.py)
-- SRR metric (src/evaluation/srr.py)
-- Evaluation runner (src/evaluation/evaluate.py)
-- CNN Encoder with style + content heads (src/models/encoder.py)
-- CNN Decoder with interpolation (src/models/decoder.py)
-- SymmetryVAE full model + loss (src/models/vae.py)
-- Training loop with grad clipping, checkpointing (train.py)
-- requirements.txt
-- Fixed NSynthBass to parse pitch from filename (no json needed)
-- NSynth bass subset loaded: 12,075 samples
-- MoisesDB download running as SLURM job (6507167)
-- Conda env working: /scratch/at7095/conda_envs/musicvae (Python 3.9)
-- HPC repo at: /scratch/at7095/ML_Project/Disentangled-Representations-Learning-for-Music-Processing
+- - Migrated from Greene (Adarsh's cluster) to NYU Cloud Bursting (via OOD)
+  - Slurm account: ds_ga_1003-2026sp
+  - 300 GPU-hour budget (course allocation)
+  - Spot instance architecture; all Slurm scripts require --requeue
+- Conda env working: /scratch/mty236/conda_envs/musicvae (Python 3.9)
+- Installed requirements.txt + tqdm: librosa 0.11.0, torch 2.8.0+cu128, numpy 1.23.5
+- NSynth train set downloaded and extracted: 289,205 audio files total, 65,474 bass files
+- MoisesDB downloaded (88.82 GB) and extracted: 240 tracks, 275 bass files
+- SLURM scripts written for dataset downloads + unzip + preprocessing
+- Preprocessing script written (scripts/preprocess_pitch_shifts.py)
+  - Uses real librosa.effects.pitch_shift in waveform space
+  - Generates 5 discrete shifts per source file: {-6, -3, 0, +3, +6} semitones
+  - For MoisesDB: 20 random crops per stem × 5 shifts
+  - Parallelized via multiprocessing.Pool
+- Preprocessing script tested on single NSynth file: 5 npy files produced, shape (128, 126), dtype float32
+- Full preprocessing not yet submitted — pending code review before committing compute
+- Mel Spectrograms seem unhelpful for Latent Representation Analysis
+- Full Metrics Re-evaluation is required
 
-## April 18, 2026
+- ### Bugs identified in original pipeline (pending fix)
+- nsynth_preprocessed.py and moisesdb_preprocessed.py use np.roll on mel axis instead of real pitch-shift in waveform space. This means the "symmetry constraint" in the paper isn't trained on actual pitch-shift equivariance; it's trained on mel-axis rotations, which have no acoustic meaning.
+- vae.py loss implements only style invariance (Lsym = MSE(zs(x), zs(Tg x))). Content equivariance (zc(Tg x) = ρ(g)zc(x)) is missing from both the loss and the forward pass — the model doesn't receive the shift amount g as input.
+- dci.py Informativeness uses training-set accuracy (clf.fit(z,f); clf.score(z,f) on same data). This is memorization, not informativeness. Explains why DCI-I = 0.959 across all three models.
+- srr.py computes ratio on log-mel values directly, not on linear power. Units are meaningless; didn't catch the April 20 decoder collapse until weeks later.
+- MIG has no random_state set for mutual_info_classif, making runs nondeterministic.
 
-### Done
-- Fixed home dir quota on HPC (cleared 5.3GB from .local)
-- Conda env working: /scratch/at7095/conda_envs/musicvae (Python 3.9)
-- NSynth fully extracted: 65,474 bass files
-- MoisesDB fully extracted: 240 tracks, 237 bass files, 12,510 chunks
-- Preprocessing script: converted all audio to mel spectrograms (.npy)
-  - NSynth: 65,474 npy files
-  - MoisesDB: 12,510 npy files (4s chunks)
-- Preprocessed dataset classes (nsynth_preprocessed.py, moisesdb_preprocessed.py)
-- Fixed GPU utilization issue — npy loading keeps GPU busy
-- Training job running: job 6546023, epoch 4+ in progress
-- MoisesDB dataset class updated to match actual path structure
+### Issues encountered and resolved
+- First MoisesDB unzip (job 171066) silently failed: only 115 of 2585 wav files extracted despite exit code 0:0. Cause: `unzip -q` flag suppressed warnings. Resolved: re-ran without -q and captured output, which revealed that unzip was aborting due to zip-bomb detection (MoisesDB's wav-heavy content trips the compression-ratio heuristic).
+- Second unzip (job 171116) resolved by setting UNZIP_DISABLE_ZIPBOMB_DETECTION=TRUE before unzip. Successfully extracted all 2585 wav files.
+- Initial pip install landed 6.9 GB of packages in ~/.local/ instead of the conda env because conda wasn't properly activated before pip. Cleaned up and re-installed after sourcing /share/apps/pyenv/py3.9/etc/profile.d/conda.sh and activating explicitly. Verified correct site-packages path via `python -c "import site; print(site.getsitepackages())"` before second attempt.
 
-## April 18, 2026 (continued)
-### Done
-- Diagnosed NaN loss explosion in training job 6558198 (all 50 epochs NaN)
-- Root cause: BatchNorm2d in encoder producing NaN on near-silent mel batches
-- Fix: replaced all BatchNorm2d → InstanceNorm2d(affine=True) in encoder.py
-- Fixed encoder forward bug: both heads using content_head instead of style_head/content_head
-- Reduced lr 1e-3 → 3e-4 for stability
-- Added NaN gradient detection + batch skip in train loop
-- Clean 50-epoch training run completed (job 6588403, beta=1.0, lambda_sym=1.0, final avg loss: 13.0723)
-- Fixed evaluate.py bugs (encoder/identity/pitch key errors), added run_eval.py runner
-- Run 1 evaluation completed (job 6589342):
-  - mig_pitch:    0.0093
-  - mig_identity: 0.0808
-  - dci_d:        0.0420
-  - dci_c:        0.0248
-  - dci_i:        0.9590
-  - srr_db:       25.19 dB
-- Results committed to git
-- Resubmitted training with stronger hyperparameters (job 6589672, beta=4.0, lambda_sym=10.0)
-## April 19, 2026
-### Done
+### Directory layout on HPC
+- Repo: /scratch/mty236/ML_Project/Disentangled-Representations-Learning-for-Music-Processing
+- Data: /scratch/mty236/ML_Project/data/{nsynth_raw, moisesdb_raw, nsynth_shifted, moisesdb_shifted}
+- Logs: /scratch/mty236/ML_Project/logs/
+- Scripts: /scratch/mty236/ML_Project/scripts/ (committed to git)
+- Conda env: /scratch/mty236/conda_envs/musicvae
 
-- Run 2 training completed (job 6589672, beta=4.0, lambda_sym=10.0, final avg loss: 19.6504)
-- Run 2 evaluation completed (job 6595570):
-  - mig_pitch:    0.0245  (↑ from 0.0093)
-  - mig_identity: 0.0050  (↓ from 0.0808)
-  - dci_d:        0.0456  (↑ from 0.0420)
-  - dci_c:        0.0446  (↑ from 0.0248)
-  - dci_i:        0.9590  (unchanged)
-  - srr_db:       23.75   (↓ from 25.19)
-- Key finding: stronger beta/lambda_sym improves pitch disentanglement but hurts
-  identity separability — tradeoff worth discussing in writeup
-- Eval outputs saved to logs/eval_run2_beta4_lsym10.out
-
-## April 20, 2026
-### Done
-- Implemented β-VAE baseline (src/models/beta_vae.py, train_beta_vae.py)
-- Run 3 training completed (job 6737470, beta=4.0, lambda_sym=50.0, 50 epochs, avg loss: 20.1638)
-- β-VAE baseline training completed (job 6737469, beta=4.0, 50 epochs, avg loss: 19.6362)
-- Fixed run_eval.py to auto-detect SymmetryVAE vs BetaVAE from checkpoint
-- All evaluations completed:
-
-| Metric       | β-VAE (β=4) | Run1 (β=1,λ=1) | Run2 (β=4,λ=10) | Run3 (β=4,λ=50) |
-|--------------|-------------|-----------------|-----------------|-----------------|
-| MIG pitch    | 0.0014      | 0.0093          | 0.0245          | 0.0109          |
-| MIG identity | 0.0741      | 0.0808          | 0.0050          | 0.0016          |
-| DCI-D        | 0.0466      | 0.0420          | 0.0456          | 0.0505          |
-| DCI-C        | 0.0302      | 0.0248          | 0.0446          | 0.0422          |
-| DCI-I        | 0.9590      | 0.9590          | 0.9590          | 0.9590          |
-| SRR (dB)     | 23.52       | 25.19           | 23.75           | 23.62           |
-
-- Key finding: symmetry constraint improves pitch disentanglement vs β-VAE baseline
-  but creates tradeoff with identity separability at higher lambda_sym
-- Submitting Run 4: beta=4.0, lambda_sym=10.0, 100 epochs for deeper training
-- Implemented zero-shot evaluation pipeline (src/data/zeroshot_dataset.py, run_zeroshot_eval.py)
-- Selected 8 holdout tracks across 8 genres as zero-shot test set:
-  blues, bossa_nova, country, electronic, jazz, musical_theatre, reggae, world_folk
-- Zero-shot eval completed for SymVAE Run2 and β-VAE:
-
-| Song                          | β-VAE Style Var | SymVAE Style Var |
-|-------------------------------|-----------------|------------------|
-| Can't Play The Blues          | 0.2790          | 0.3255           |
-| Dreaming Bout Being With You  | 0.2166          | 0.3079           |
-| Nexus                         | 0.2447          | 0.2900           |
-| Places                        | 0.2875          | 0.2462           |
-| Sick Of Waiting               | 0.3016          | 0.2275           |
-| Stolen Car                    | 0.4589          | 0.0977           |
-| The Best In Me                | 0.3469          | 0.2020           |
-| The Last To Know              | 0.2811          | 0.2519           |
-| **MEAN**                      | **0.3020**      | **0.2436**       |
-
-- Key finding: SymVAE produces more stable style encodings (lower Style Var)
-  across out-of-distribution songs vs β-VAE baseline
-- Stolen Car (electronic) shows strongest improvement (0.0977 vs 0.4589)
+### Next steps
+- Review preprocessing script design choices before committing compute (5 vs 13 shift values, 20 crops per MoisesDB stem, filename shift encoding)
+- Draft fixes for dci.py (cross-validated informativeness), srr.py (linear power units), mig.py (random_state)
 
 
-## April 20, 2026 (evening)
-### Bug Found — All Previous Eval Results Invalidated
-- Discovered decoder.py had BatchNorm2d in all 5 deconv layers
-- BatchNorm in eval mode uses accumulated running statistics from training
-- These statistics were inconsistent, causing decoder output to collapse to
-  near-constant values (-0.08 to -0.02) during evaluation
-- Debug output confirmed: mel_recon range was -0.08 to -0.02 vs mel_orig range
-  of -100 to +42 — decoder was completely broken in eval mode
-- Root cause: same BatchNorm issue we fixed in encoder earlier, but missed decoder
-- Fix: replaced all BatchNorm2d → InstanceNorm2d(affine=True) in decoder.py
-
-### What Was Affected
-- SRR values for all runs were wrong (showing ~23-25 dB but actually ~0.01-0.11)
-- DCI-D and DCI-C values likely affected
-- MIG scores, DCI-I, and zero-shot Style Var results are still valid
-  (encoder-only metrics, not affected by decoder bug)
-- Core findings still hold: SymmetryVAE beats beta-VAE on style stability
-
-### Fix
-- Fixed decoder.py (BatchNorm2d → InstanceNorm2d)
-- Submitted full retrain of all 3 models (job 6753596, ~16hrs):
-  1. SymmetryVAE (beta=4.0, lambda_sym=10.0, 100 epochs)
-  2. BetaVAE (beta=4.0, 50 epochs)
-  3. HierarchicalVAE (beta=4.0, 50 epochs)
-- Will re-evaluate all models once training completes
-## April 21, 2026
-### Done — All Experiments Complete
-- Fixed critical bug in run_eval.py: model weights never loaded (missing load_state_dict)
-- All previous eval results were from randomly initialized models — now fixed
-- Reran all evaluations with correct model loading
-
-### Final Clean Evaluation Results
-
-#### MIG / DCI / SRR
-| Metric       | β-VAE (β=4) | SymmetryVAE (β=4, λ=10, 100ep) | Hierarchical VAE (β=4) |
-|--------------|-------------|--------------------------------|------------------------|
-| MIG pitch    | 0.0070      | 0.0062                         | 0.0262                 |
-| MIG identity | 0.0514      | 0.0171                         | 0.0031                 |
-| DCI-D        | 0.0497      | 0.0422                         | 0.0428                 |
-| DCI-C        | 0.0242      | 0.0369                         | 0.0198                 |
-| DCI-I        | 0.9590      | 0.9590                         | 0.9590                 |
-| SRR (dB)     | 23.99       | 24.73                          | 23.29                  |
-
-#### Zero-Shot Style Stability
-| Model            | Mean Recon Err | Mean Style Var |
-|------------------|----------------|----------------|
-| SymmetryVAE      | 26.55          | 0.1111 ✅      |
-| β-VAE            | 32.17          | 0.2168         |
-| Hierarchical VAE | 33.03          | 0.4557         |
-
-### Key Findings
-- SymmetryVAE has best reconstruction quality (SRR 24.73 dB) and best style
-  stability on zero-shot tracks (Style Var 0.1111 vs 0.2168 vs 0.4557)
-- Hierarchical VAE achieves best pitch MIG (0.0262) but worst style stability
-- β-VAE has best identity MIG (0.0514) but worst zero-shot reconstruction
-- DCI-I = 0.959 across all models — all latent spaces equally informative
-- Symmetry constraint most effective at keeping style encoder stationary
-  across out-of-distribution songs — core claim of paper validated
-
-### Status
-- All experiments complete ✅
-- All results saved to logs/
-- Ready for paper writeup next weekend
-- Deadline: April 29, 2026
 
