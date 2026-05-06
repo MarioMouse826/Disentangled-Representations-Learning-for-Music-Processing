@@ -9,3 +9,6 @@ venv/
 *.key
 runs/
 wandb/
+outputs/
+run_manifest.json
+docs/training_plan.md

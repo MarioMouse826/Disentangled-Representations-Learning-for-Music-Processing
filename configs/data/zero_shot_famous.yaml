@@ -1,0 +1,24 @@
+# Hydra config for the zero-shot OOD "famous bass lines" dataset.
+#
+# Two sections:
+#   prepare:  one-shot offline shard builder (scripts/prepare_zero_shot.py).
+#   dataset:  runtime ZeroShotBass(shard_dir=...) loader.
+#
+# Licensing note: input stems must be user-owned or commercially released
+# isolated-stem releases. See docs/superpowers/plans/...md §Task 1.3.
+
+defaults:
+  - _self_
+
+prepare:
+  input_dir: data/zero_shot_famous/stems
+  output_dir: data/zero_shot_famous/shards
+  sample_rate: 16000
+  segment_seconds: 4.0
+  hop_seconds: 2.0
+  crepe_step_ms: 10.0
+  device: cpu  # switch to "cuda" / "mps" on capable hardware
+
+dataset:
+  _target_: src.data.zero_shot.ZeroShotBass
+  shard_dir: ${prepare.output_dir}

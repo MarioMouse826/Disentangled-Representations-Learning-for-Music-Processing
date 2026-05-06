@@ -1,0 +1,42 @@
+# Evaluation metric parameters — production settings.
+# Referenced by eval scripts and run_full_eval.sh.
+# DCI params from training plan: n_estimators=500, max_depth=6.
+
+mig:
+  n_bins: 20                        # histogram bins for MI estimation
+
+dci:
+  gbt_kwargs:
+    n_estimators: 500               # training plan spec: 500 trees
+    max_depth: 6                    # training plan spec: max depth 6
+    random_state: 0
+  test_size: 0.2
+
+sap:
+  svc_kwargs:
+    C: 1.0
+    kernel: rbf
+  test_size: 0.2
+
+factor_vae:
+  n_votes: 800
+  batch_size: 64
+  test_size: 0.2
+
+modularity:
+  n_bins: 20
+  min_theta_max: 0.05
+
+srr:
+  window_sizes: [512, 1024, 2048]
+
+equivariance:
+  eps: 1.0e-8
+
+# Factor keys expected in dataset labels (NSynth-bass).
+factor_keys: [pitch, velocity, instrument_source, instrument_id]
+factor_types:
+  pitch: continuous
+  velocity: continuous
+  instrument_source: discrete
+  instrument_id: discrete

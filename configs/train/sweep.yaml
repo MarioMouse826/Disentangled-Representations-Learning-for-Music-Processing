@@ -1,0 +1,75 @@
+# Hyperparameter sweep (plan Task 6.2).
+#
+# Hydra multirun composition — overrides the base config.
+# Launch:
+#   python -m src.training.cli --config-name sweep --multirun \
+#       model=sc_vae,beta_vae,beta_tcvae,factor_vae,ar_hvae
+#
+# Sweep axes:
+#   d_s, d_c                  latent widths (d_c even)
+#   beta_s, beta_c            KL weights (constant values; cyclical schedules
+#                             exposed via beta_schedule=cyclical)
+#   lambda_inv, lambda_equi   invariance / equivariance weights (0 = ablation)
+#   lambda_swap               swap-consistency weight
+#   g_cents.distribution      pitch-shift sampling distribution
+#   rep_type                  group representation (identity = ablation arm)
+#   seed                      5 seeds per cell
+
+defaults:
+  - /base  # inherit seed, lit, trainer from configs/base.yaml
+  - _self_
+
+# --- sweep axes (Hydra multirun syntax: value1,value2,...) -----------------
+#
+# Applied via --multirun at launch, e.g.:
+#   --multirun model.d_s=16,32,64 lit.beta_s=1,4,8 lit.lambda_inv=0,0.1,1,10
+
+# Placeholders documenting the full Cartesian product (reviewer-disclosed
+# appendix). Hydra resolves these lazily — you can override any subset on
+# the CLI.
+sweep:
+  d_s: [16, 32, 64]
+  d_c: [16, 32, 64]  # must be even (enforced by RotationRep)
+  beta_s_const: [1, 4, 8]
+  beta_c_const: [1, 4, 8]
+  beta_schedule: [constant, cyclical]   # cyclical = 4 cycles to peak=4
+  lambda_inv: [0, 0.1, 1, 10]
+  lambda_equi: [0, 0.1, 1, 10]
+  lambda_swap: [0, 0.5, 1]
+  g_cents_dist: [uniform_full, uniform_half, discrete_semitones]
+  rep_type: [rotation, translation, identity]  # identity = ablation
+  seeds: [0, 1, 2, 3, 4]
+
+# Defaults for any axis not pinned by CLI override. All fields resolve into
+# the base config hierarchy.
+model:
+  d_s: 32
+  d_c: 32
+  rep_type: rotation
+
+lit:
+  beta_s: 1.0
+  beta_c: 1.0
+  beta_schedule: constant       # or 'cyclical' (4 cycles, peak 4)
+  lambda_inv: 1.0
+  lambda_equi: 1.0
+  lambda_swap: 0.0
+  g_cents_dist: uniform_full    # one of sweep.g_cents_dist
+  total_steps: 100000
+  warmup_steps: 1000
+
+trainer:
+  max_epochs: 200
+  logger: wandb
+  enable_checkpointing: true
+  gradient_clip_val: 1.0
+
+# --- Hydra multirun launcher (optional; override with +launcher=submitit_slurm
+# on HPC) ------------------------------------------------------------------
+hydra:
+  mode: MULTIRUN
+  sweep:
+    dir: runs/sweep_${now:%Y%m%d_%H%M%S}
+    subdir: ${hydra.job.num}_${model.d_s}_${model.d_c}_bs${lit.beta_s}_bc${lit.beta_c}_li${lit.lambda_inv}_le${lit.lambda_equi}_rep${model.rep_type}_seed${seed}
+  job:
+    chdir: true

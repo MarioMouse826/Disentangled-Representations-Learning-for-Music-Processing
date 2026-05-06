@@ -1,0 +1,39 @@
+# Main training entrypoint — composes model + data + lit module + trainer.
+#
+# Usage:
+#   python -m src.training.cli                              # default sc_vae + synthetic
+#   python -m src.training.cli model=beta_vae               # swap in β-VAE baseline
+#   python -m src.training.cli +trainer.fast_dev_run=true   # 1-batch smoke
+#   python -m src.training.cli trainer.max_epochs=100 lit.beta_s=4.0
+
+defaults:
+  - _self_
+  - model: sc_vae
+  - data: synthetic
+
+seed: 0
+
+lit:
+  _target_: src.training.lit_module.VAELitModule
+  lr: 1.0e-4
+  betas: [0.9, 0.99]
+  weight_decay: 1.0e-6
+  warmup_steps: 100
+  total_steps: 1000
+  beta_s: 1.0
+  beta_c: 1.0
+  tau_s: 0.1
+  tau_c: 0.1
+  lambda_inv: 1.0
+  lambda_equi: 1.0
+  lambda_swap: 0.0
+  grad_clip_norm: 1.0
+
+trainer:
+  max_epochs: 1
+  accelerator: auto
+  devices: auto
+  logger: false
+  enable_progress_bar: false
+  enable_checkpointing: false
+  gradient_clip_val: 1.0

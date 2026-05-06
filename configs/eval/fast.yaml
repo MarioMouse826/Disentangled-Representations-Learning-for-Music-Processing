@@ -1,0 +1,40 @@
+# Fast eval config — reduced params for smoke testing and CI.
+# DO NOT use for paper results.
+
+mig:
+  n_bins: 10
+
+dci:
+  gbt_kwargs:
+    n_estimators: 50
+    max_depth: 4
+    random_state: 0
+  test_size: 0.2
+
+sap:
+  svc_kwargs:
+    C: 1.0
+    kernel: rbf
+  test_size: 0.2
+
+factor_vae:
+  n_votes: 100
+  batch_size: 32
+  test_size: 0.2
+
+modularity:
+  n_bins: 10
+  min_theta_max: 0.05
+
+srr:
+  window_sizes: [1024]
+
+equivariance:
+  eps: 1.0e-8
+
+factor_keys: [pitch, velocity, instrument_source, instrument_id]
+factor_types:
+  pitch: continuous
+  velocity: continuous
+  instrument_source: discrete
+  instrument_id: discrete

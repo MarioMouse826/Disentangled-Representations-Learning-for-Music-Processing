@@ -1,0 +1,25 @@
+# MoisesDB bass dataset with on-the-fly log-mel computation.
+# Requires MOISESDB_ROOT env var pointing to the MoisesDB dataset root.
+# Used for Stage 4 cross-dataset defensibility (mini-arm, 50 epochs).
+#
+# Usage:
+#   MOISESDB_ROOT=/path/to/moisesdb python -m src.training.cli data=moisesdb_bass
+
+train_dataset:
+  _target_: src.data.moisesdb_mel.MoisesDBBassMel
+  root: ${oc.env:MOISESDB_ROOT}
+  split: train
+  crop_seconds: 4.0
+  sample_rate: 16000
+  deterministic: false
+
+val_dataset:
+  _target_: src.data.moisesdb_mel.MoisesDBBassMel
+  root: ${oc.env:MOISESDB_ROOT}
+  split: valid
+  crop_seconds: 4.0
+  sample_rate: 16000
+  deterministic: true
+
+batch_size: 16
+num_workers: 4

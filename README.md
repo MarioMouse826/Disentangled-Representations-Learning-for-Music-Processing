@@ -7,12 +7,18 @@ See `docs/superpowers/plans/symmetry-constrained-vae-implementation.md` for the 
 ## Setup
 
 ```bash
-# create conda env (python 3.11)
-conda create -n sc-vae python=3.11 -y
-conda activate sc-vae
+# system deps (macOS arm64; skip on Linux)
+brew install libsndfile rubberband
 
-# install
-make install
+# virtual env (python 3.11)
+python3.11 -m venv .venv
+source .venv/bin/activate
+
+# install python deps
+pip install -r requirements.txt
+
+# macOS arm64 libsndfile shim (once): link brew's libsndfile into soundfile package
+ln -sf /opt/homebrew/lib/libsndfile.dylib .venv/lib/python3.11/site-packages/_soundfile_data/libsndfile.dylib
 ```
 
 ## Quick start

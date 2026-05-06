@@ -1,0 +1,10 @@
+# β-TCVAE baseline (plan Task 2.5).
+_target_: src.models.baselines.beta_tcvae.BetaTCVAE
+d_z: 64
+n_mels: 128
+n_time: 401
+channels: [32, 64, 128, 256, 512]
+strides: [2, 2, 2, 2, 2]
+decoder_base_freq: 4
+alpha: 1.0
+gamma: 1.0

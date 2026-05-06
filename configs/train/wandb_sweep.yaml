@@ -1,0 +1,54 @@
+# W&B sweep configuration (plan Task 6.2).
+#
+# Launch:
+#   wandb sweep configs/train/wandb_sweep.yaml
+#   wandb agent <entity>/<project>/<sweep_id> --count 200
+#
+# W&B Bayesian search over the disclosed space; paired with Hydra overrides
+# via the `command` block. For full grid, change method: grid.
+
+program: -m
+method: bayes
+metric:
+  name: val/total_loss
+  goal: minimize
+
+parameters:
+  seed:
+    values: [0, 1, 2, 3, 4]
+
+  model.d_s:
+    values: [16, 32, 64]
+  model.d_c:
+    values: [16, 32, 64]        # even by construction for rotation rep
+  model.rep_type:
+    values: [rotation, translation, identity]
+
+  lit.beta_s:
+    values: [1, 4, 8]
+  lit.beta_c:
+    values: [1, 4, 8]
+  lit.beta_schedule:
+    values: [constant, cyclical]
+  lit.lambda_inv:
+    values: [0, 0.1, 1, 10]
+  lit.lambda_equi:
+    values: [0, 0.1, 1, 10]
+  lit.lambda_swap:
+    values: [0, 0.5, 1]
+  lit.g_cents_dist:
+    values: [uniform_full, uniform_half, discrete_semitones]
+
+# W&B reserved field: how each trial is launched. `${args_no_hyphens}`
+# expands to `key=value` pairs that Hydra understands directly.
+command:
+  - ${env}
+  - python
+  - src.training.cli
+  - --config-name=sweep
+  - ${args_no_hyphens}
+
+early_terminate:
+  type: hyperband
+  min_iter: 5          # epochs
+  eta: 3
