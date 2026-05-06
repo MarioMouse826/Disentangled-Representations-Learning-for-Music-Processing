@@ -2,7 +2,6 @@
 
 Implementation of a Symmetry-Constrained Variational Autoencoder (SC-VAE) that disentangles timbre (`z_s`) from pitch/content (`z_c`) in monophonic bass audio via pitch-shift *invariance* on the style subspace and pitch-shift *equivariance* on the content subspace. Group structure follows Higgins et al. (2018) "Towards a Definition of Disentangled Representations" (arXiv:1812.02230).
 
-See `docs/superpowers/plans/symmetry-constrained-vae-implementation.md` for the full implementation plan (1089 lines, publication-grade).
 
 ## Setup
 
