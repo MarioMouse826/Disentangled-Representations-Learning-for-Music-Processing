@@ -1,7 +1,7 @@
-# FactorVAE baseline (plan Task 2.3).
+# FactorVAE baseline with CQT features (plan Task 2.3).
 _target_: src.models.baselines.factor_vae.FactorVAE
 d_z: 64
-n_mels: 128
+n_mels: 84                          # CQT: 12 bins/octave × 7 octaves (vs mel: 128)
 n_time: 401
 channels: [32, 64, 128, 256, 512]
 strides: [2, 2, 2, 2, 2]

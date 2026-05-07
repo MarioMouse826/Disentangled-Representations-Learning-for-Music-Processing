@@ -1,18 +1,20 @@
-# NSynth-bass HDF5 cached dataset (pre-computed log-mel spectrograms).
+# NSynth-bass HDF5 cached dataset with CQT features (pre-computed via scripts/prepare_nsynth_cache.py).
 # Requires NSYNTH_CACHE_TRAIN and NSYNTH_CACHE_VALID env vars pointing to
-# HDF5 files produced by scripts/prepare_nsynth_cache.py.
+# HDF5 files produced by scripts/prepare_nsynth_cache.py --feature-type cqt.
 #
 # Usage:
 #   python -m src.training.cli data=nsynth_bass
-#   NSYNTH_CACHE_TRAIN=/path/train.h5 NSYNTH_CACHE_VALID=/path/valid.h5 python -m src.training.cli data=nsynth_bass
+#   NSYNTH_CACHE_TRAIN=/path/train_cqt.h5 NSYNTH_CACHE_VALID=/path/valid_cqt.h5 python -m src.training.cli data=nsynth_bass
 
 train_dataset:
   _target_: src.data.nsynth_cached.NSynthBassCached
   h5_path: ${oc.env:NSYNTH_CACHE_TRAIN}
+  feature_type: cqt
 
 val_dataset:
   _target_: src.data.nsynth_cached.NSynthBassCached
   h5_path: ${oc.env:NSYNTH_CACHE_VALID}
+  feature_type: cqt
 
 batch_size: 32
 num_workers: 4

@@ -1,8 +1,8 @@
-# SC-VAE model config (plan Task 3.8).
+# SC-VAE model config with CQT feature extraction (plan Task 3.8).
 _target_: src.models.sc_vae.SCVAE
 d_s: 32
 d_c: 16
-n_mels: 128
+n_mels: 84                          # CQT: 12 bins/octave × 7 octaves (vs mel: 128)
 n_time: 401
 channels: [32, 64, 128, 256, 512]
 strides: [2, 2, 2, 2, 2]
@@ -11,3 +11,9 @@ style_hidden_score: 128
 rep_type: rotation
 period_cents: 1200.0
 freq_init: octave
+
+# CQT parameters (for documentation; actual params used in data loaders)
+n_bins_per_octave: 12
+n_octaves: 7
+fmin: 32.7
+hop_length: 160

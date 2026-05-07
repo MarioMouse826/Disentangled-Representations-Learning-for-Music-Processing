@@ -1,17 +1,18 @@
 # Synthetic paired dataset — smoke-test fixture only. No disk I/O.
 # Real training uses `configs/data/nsynth_bass.yaml` with PairedPitchShiftCollate.
+# Note: Synthetic data uses mel spectrograms for backward compatibility with test fixtures.
 
 train_dataset:
   _target_: src.training.synthetic_data.SyntheticPairedDataset
   n: 8
-  n_mels: 128
+  n_mels: 84                        # Match CQT bins (84 = 12 * 7)
   n_time: 401
   seed: 0
 
 val_dataset:
   _target_: src.training.synthetic_data.SyntheticPairedDataset
   n: 8
-  n_mels: 128
+  n_mels: 84
   n_time: 401
   seed: 1
 

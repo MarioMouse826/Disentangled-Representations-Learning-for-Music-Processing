@@ -1,7 +1,7 @@
-# Autoregressive Hierarchical VAE baseline (plan Task 2.4).
+# Autoregressive Hierarchical VAE baseline with CQT features (plan Task 2.4).
 _target_: src.models.baselines.ar_hvae.AR_HVAE
 levels: [32, 16, 8]
-n_mels: 128
+n_mels: 84                          # CQT: 12 bins/octave × 7 octaves (vs mel: 128)
 n_time: 401
 channels: [32, 64, 128, 256, 512]
 strides: [2, 2, 2, 2, 2]

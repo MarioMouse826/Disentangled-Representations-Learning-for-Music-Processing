@@ -1,4 +1,4 @@
-# MoisesDB bass dataset with on-the-fly log-mel computation.
+# MoisesDB bass dataset with on-the-fly CQT computation.
 # Requires MOISESDB_ROOT env var pointing to the MoisesDB dataset root.
 # Used for Stage 4 cross-dataset defensibility (mini-arm, 50 epochs).
 #
@@ -12,6 +12,11 @@ train_dataset:
   crop_seconds: 4.0
   sample_rate: 16000
   deterministic: false
+  feature_type: cqt
+  n_bins_per_octave: 12
+  n_octaves: 7
+  fmin: 32.7
+  hop_length: 160
 
 val_dataset:
   _target_: src.data.moisesdb_mel.MoisesDBBassMel
@@ -20,6 +25,11 @@ val_dataset:
   crop_seconds: 4.0
   sample_rate: 16000
   deterministic: true
+  feature_type: cqt
+  n_bins_per_octave: 12
+  n_octaves: 7
+  fmin: 32.7
+  hop_length: 160
 
 batch_size: 16
 num_workers: 4
