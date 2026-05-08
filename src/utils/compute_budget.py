@@ -46,7 +46,11 @@ class BudgetTracker:
         self._t_stop = None
         if torch.cuda.is_available():
             for i in range(torch.cuda.device_count()):
-                torch.cuda.reset_peak_memory_stats(i)
+                try:
+                    torch.cuda.reset_peak_memory_stats(i)
+                except RuntimeError:
+                    # Device may not be visible/accessible; skip
+                    pass
         return self
 
     def stop(self) -> "BudgetTracker":
@@ -72,10 +76,13 @@ class BudgetTracker:
 
         if torch.cuda.is_available():
             num_devices = torch.cuda.device_count()
-            peak_bytes = max(
-                (torch.cuda.max_memory_allocated(i) for i in range(num_devices)),
-                default=0,
-            )
+            peak_bytes = 0
+            for i in range(num_devices):
+                try:
+                    peak_bytes = max(peak_bytes, torch.cuda.max_memory_allocated(i))
+                except RuntimeError:
+                    # Device may not be visible/accessible; skip
+                    pass
             peak_gb = peak_bytes / _BYTES_PER_GB
             gpu_hours = wall_h * num_devices
         else:
