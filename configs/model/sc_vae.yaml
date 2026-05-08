@@ -1,4 +1,6 @@
 # SC-VAE model config with CQT feature extraction (plan Task 3.8).
+# Note: CQT feature extraction uses 84 bins (12 bins/octave × 7 octaves)
+#       instead of Mel's 128 bins for better bass representation.
 _target_: src.models.sc_vae.SCVAE
 d_s: 32
 d_c: 16
@@ -11,9 +13,3 @@ style_hidden_score: 128
 rep_type: rotation
 period_cents: 1200.0
 freq_init: octave
-
-# CQT parameters (for documentation; actual params used in data loaders)
-n_bins_per_octave: 12
-n_octaves: 7
-fmin: 32.7
-hop_length: 160
