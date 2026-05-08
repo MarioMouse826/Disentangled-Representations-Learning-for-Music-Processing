@@ -47,8 +47,8 @@ class NSynthBass(Dataset):
 
     SOURCES: dict[str, int] = {"acoustic": 0, "electronic": 1, "synthetic": 2}
     _SPLITS: frozenset[str] = frozenset({"train", "valid", "test"})
-    _PITCH_MIN: int = 21
-    _PITCH_MAX: int = 108
+    _PITCH_MIN: int = 0    # Allow extended MIDI range for bass instruments
+    _PITCH_MAX: int = 127  # Full MIDI range (was 21-108, too restrictive for bass)
 
     def __init__(
         self,
